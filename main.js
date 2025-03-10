@@ -8,7 +8,6 @@ class HourglassTimer {
     this.timeLeft = 60;
     this.isRunning = false;
     this.lastTime = 0;
-    this.sounds = {};
     this.lastParticleTime = 0;
     this.particleSpawnRate = 15;
     
@@ -16,11 +15,10 @@ class HourglassTimer {
     this.middleY = 200;
     this.neckX1 = 150 - this.neckWidth;
     this.neckX2 = 150 + this.neckWidth;
-    this.hasCrossedNeck = new Set();
     
-    this.sandLevel = 350;
-    this.targetSandLevel = 350;
-    this.finalSandLevel = this.middleY + this.neckWidth;
+    this.bottomSandLevel = 350;
+    this.targetBottomSandLevel = 350;
+    this.finalBottomSandLevel = this.middleY + this.neckWidth;
     
     this.baseColor = '#f0d78c';
     this.flashColor = '#fff7d6';
@@ -34,8 +32,8 @@ class HourglassTimer {
     const particleCount = 600;
     for (let i = 0; i < particleCount; i++) {
       this.particles.push({
-        x: 150 + (Math.random() * 60 - 30),
-        y: 80 + (Math.random() * 40 - 20),
+        x: 150 + (Math.random() * 30 - 15),
+        y: this.middleY - this.neckWidth,
         size: 2.5,
         speedX: 0,
         speedY: 0,
@@ -44,7 +42,6 @@ class HourglassTimer {
         color: this.baseColor
       });
     }
-    this.hasCrossedNeck.clear();
   }
 
   getHourglassWidth(y) {
@@ -77,20 +74,8 @@ class HourglassTimer {
       if (inactiveParticle) {
         inactiveParticle.active = true;
         inactiveParticle.speedY = 0.1;
-        inactiveParticle.x = 150 + (Math.random() * 60 - 30);
-        inactiveParticle.y = 80 + (Math.random() * 40 - 20);
-        inactiveParticle.sleeping = false;
-      } else if (this.particles.length < 1000) {
-        this.particles.push({
-          x: 150 + (Math.random() * 60 - 30),
-          y: 80 + (Math.random() * 40 - 20),
-          size: 2.5,
-          speedX: 0,
-          speedY: 0.1,
-          active: true,
-          sleeping: false,
-          color: this.baseColor
-        });
+        inactiveParticle.x = 150 + (Math.random() * 30 - 15);
+        inactiveParticle.y = this.middleY - this.neckWidth;
       }
       this.lastParticleTime -= particleInterval;
     }
@@ -114,13 +99,9 @@ class HourglassTimer {
       let newX = particle.x + particle.speedX;
       let newY = particle.y + particle.speedY;
 
-      if (newY >= this.sandLevel) {
+      if (newY >= this.bottomSandLevel) {
         particle.sleeping = true;
         return;
-      }
-
-      if (particle.y < this.middleY && newY >= this.middleY) {
-        this.hasCrossedNeck.add(particle);
       }
 
       if (Math.abs(newY - this.middleY) < this.neckWidth) {
@@ -159,6 +140,7 @@ class HourglassTimer {
     this.ctx.strokeStyle = this.currentColor;
     this.ctx.lineWidth = 3;
     
+    // Draw hourglass outline
     this.ctx.beginPath();
     this.ctx.moveTo(100, 50);
     this.ctx.lineTo(200, 50);
@@ -169,23 +151,45 @@ class HourglassTimer {
     this.ctx.closePath();
     this.ctx.stroke();
 
+    // Draw bottom sand pile
     this.ctx.fillStyle = this.currentColor;
     this.ctx.beginPath();
     this.ctx.moveTo(100, 350);
     this.ctx.lineTo(200, 350);
     
-    const progress = (this.sandLevel - this.middleY) / (350 - this.middleY);
-    const width = 50 * progress;
+    const bottomProgress = (this.bottomSandLevel - this.middleY) / (350 - this.middleY);
+    const bottomWidth = 50 * bottomProgress;
     
-    this.ctx.lineTo(150 + width, this.sandLevel);
-    this.ctx.lineTo(150 - width, this.sandLevel);
+    this.ctx.lineTo(150 + bottomWidth, this.bottomSandLevel);
+    this.ctx.lineTo(150 - bottomWidth, this.bottomSandLevel);
     this.ctx.closePath();
     this.ctx.fill();
+
+    // Draw top sand pile with inverse progress
+    const topProgress = this.timeLeft / 60;
+    if (topProgress > 0) {
+      const topWidth = 40;
+      const baseY = 90;
+      
+      // Calculate height reduction based on bottom sand level
+      const bottomSandProgress = 1 - ((this.bottomSandLevel - this.middleY) / (350 - this.middleY));
+      const heightMultiplier = bottomSandProgress * topProgress;
+      
+      this.ctx.beginPath();
+      // Start from the neck where particles spawn (wider area)
+      this.ctx.moveTo(150 - 30, this.middleY - this.neckWidth);
+      this.ctx.lineTo(150 + 30, this.middleY - this.neckWidth);
+      // Draw angled lines up to the top width, adjusted by height multiplier
+      this.ctx.lineTo(150 + (topWidth * heightMultiplier), baseY);
+      this.ctx.lineTo(150 - (topWidth * heightMultiplier), baseY);
+      this.ctx.closePath();
+      this.ctx.fill();
+    }
   }
 
   drawParticles() {
     this.particles.forEach(particle => {
-      if (!particle.active || particle.y >= this.sandLevel) return;
+      if (!particle.active || particle.sleeping) return;
       this.ctx.fillStyle = this.currentColor;
       this.ctx.beginPath();
       this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
@@ -208,8 +212,8 @@ class HourglassTimer {
   }
 
   updateSandLevel() {
-    this.targetSandLevel = 350 - (350 - this.finalSandLevel) * (1 - this.timeLeft / 60);
-    this.sandLevel += (this.targetSandLevel - this.sandLevel) * 0.1;
+    this.targetBottomSandLevel = 350 - (350 - this.finalBottomSandLevel) * (1 - this.timeLeft / 60);
+    this.bottomSandLevel += (this.targetBottomSandLevel - this.bottomSandLevel) * 0.1;
   }
 
   updateColors() {
@@ -225,7 +229,7 @@ class HourglassTimer {
   reset() {
     this.timeLeft = 60;
     this.lastParticleTime = 0;
-    this.sandLevel = 350;
+    this.bottomSandLevel = 350;
     this.createParticles();
     this.isRunning = true;
     this.lastTime = performance.now();
