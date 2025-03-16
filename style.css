@@ -1,41 +1,40 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 body {
   margin: 0;
+  padding: 0;
+  background-color: #222;
   font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
 }
 
 .container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  background-color: #1a1a1a;
+  gap: 20px;
 }
 
 canvas {
-  background-color: #2a2a2a;
+  background-color: #333;
   border-radius: 10px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
 .controls {
-  margin-top: 20px;
+  display: flex;
+  gap: 10px;
 }
 
 button {
-  padding: 12px 24px;
-  font-size: 18px;
+  padding: 10px 20px;
   background-color: #4a90e2;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  font-size: 16px;
   transition: background-color 0.3s;
 }
 
