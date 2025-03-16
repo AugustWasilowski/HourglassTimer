@@ -165,23 +165,31 @@ class HourglassTimer {
     this.ctx.closePath();
     this.ctx.fill();
 
-    // Draw top sand pile with inverse progress
+    // Draw top sand pile with correct orientation and width
     const topProgress = this.timeLeft / 60;
     if (topProgress > 0) {
-      const topWidth = 40;
-      const baseY = 90;
+      // Calculate width at the top based on the hourglass shape
+      const topY = 50;
+      const topHourglassWidth = 50; // Half width of hourglass at top (100 to 200)
       
-      // Calculate height reduction based on bottom sand level
-      const bottomSandProgress = 1 - ((this.bottomSandLevel - this.middleY) / (350 - this.middleY));
-      const heightMultiplier = bottomSandProgress * topProgress;
+      // Use a slightly smaller width for the sand to make it parallel to the walls
+      const topSandWidth = topHourglassWidth - 5;
+      
+      // Calculate the width at the neck level
+      const neckY = this.middleY - this.neckWidth;
+      const neckProgress = (neckY - 50) / (this.middleY - 50);
+      const neckHourglassWidth = 50 * (1 - neckProgress);
+      
+      // Use a slightly smaller width for the sand at neck level
+      const neckSandWidth = neckHourglassWidth - 5;
       
       this.ctx.beginPath();
-      // Start from the neck where particles spawn (wider area)
-      this.ctx.moveTo(150 - 30, this.middleY - this.neckWidth);
-      this.ctx.lineTo(150 + 30, this.middleY - this.neckWidth);
-      // Draw angled lines up to the top width, adjusted by height multiplier
-      this.ctx.lineTo(150 + (topWidth * heightMultiplier), baseY);
-      this.ctx.lineTo(150 - (topWidth * heightMultiplier), baseY);
+      // Start from the top corners with adjusted width
+      this.ctx.moveTo(150 - topSandWidth, topY);
+      this.ctx.lineTo(150 + topSandWidth, topY);
+      // Draw angled lines down to the neck with adjusted width
+      this.ctx.lineTo(150 + neckSandWidth, neckY);
+      this.ctx.lineTo(150 - neckSandWidth, neckY);
       this.ctx.closePath();
       this.ctx.fill();
     }
