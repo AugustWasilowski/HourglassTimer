@@ -8,11 +8,16 @@
 </head>
 <body>
   <div class="container">
-    <canvas id="hourglass"></canvas>
+    <h1>Hourglass Timer</h1>
+    <div class="timer-display">
+      <canvas id="hourglass-canvas"></canvas>
+      <div id="time">01:00</div>
+    </div>
     <div class="controls">
-      <button id="resetBtn">Reset Timer</button>
+      <button id="start">Start</button>
+      <button id="reset">Reset</button>
     </div>
   </div>
-  <script type="module" src="/main.js"></script>
+  <script type="module" src="main.js"></script>
 </body>
 </html>

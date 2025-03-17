@@ -17,13 +17,20 @@ for file in "${required_files[@]}"; do
   fi
 done
 
-# Login to GitHub Container Registry using the token
-echo "Authenticating with GitHub..."
-echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
+# Skip GitHub login for now as it's causing TTY issues
+# echo "Authenticating with GitHub..."
+# echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
 
 # Build the Docker image
 echo "Building Docker image..."
-docker build --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t hourglass-timer:latest .
+# Remove git context from build to avoid permission issues
+docker build --no-cache --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t hourglass-timer:latest .
+
+# Check if build was successful
+if [ $? -ne 0 ]; then
+  echo "Error: Docker build failed"
+  exit 1
+fi
 
 # Check if previous container exists and remove it
 if [ "$(docker ps -aq -f name=hourglass-timer)" ]; then
@@ -36,4 +43,9 @@ fi
 echo "Starting container..."
 docker run -d -p 80:80 --name hourglass-timer hourglass-timer:latest
 
-echo "Deployment complete! Application available at http://localhost"
+if [ $? -eq 0 ]; then
+  echo "Deployment complete! Application available at http://localhost"
+else
+  echo "Error: Failed to start container"
+  exit 1
+fi
