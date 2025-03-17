@@ -17,20 +17,28 @@ for file in "${required_files[@]}"; do
   fi
 done
 
-# Skip GitHub login for now as it's causing TTY issues
-# echo "Authenticating with GitHub..."
-# echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
-
 # Build the Docker image
 echo "Building Docker image..."
-# Remove git context from build to avoid permission issues
-docker build --no-cache --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t hourglass-timer:latest .
+# Create a temporary build directory to avoid git context issues
+mkdir -p tmp_build
+cp -r index.html main.js style.css vite.config.js package*.json nginx.conf tmp_build/
+if [ -d "public" ]; then
+  cp -r public tmp_build/
+fi
+
+# Build from the temporary directory
+docker build --no-cache --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t hourglass-timer:latest -f Dockerfile tmp_build
 
 # Check if build was successful
 if [ $? -ne 0 ]; then
   echo "Error: Docker build failed"
+  # Clean up
+  rm -rf tmp_build
   exit 1
 fi
+
+# Clean up
+rm -rf tmp_build
 
 # Check if previous container exists and remove it
 if [ "$(docker ps -aq -f name=hourglass-timer)" ]; then

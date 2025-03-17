@@ -6,12 +6,11 @@ ARG GITHUB_TOKEN
 WORKDIR /app
 COPY package*.json ./
 
-# Install dependencies without using GitHub packages
+# Install dependencies
 RUN npm install
 
 # Copy application files
-COPY index.html main.js style.css vite.config.js ./
-COPY public ./public
+COPY . ./
 
 # Build the application
 RUN npm run build
